@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Transaction\Domain;
 
+use LogicException;
 use DateTimeInterface;
 
 class Transaction
 {
+    protected int $id;
+
     public function __construct(
-        private readonly int $id,
         private readonly string $name,
         private readonly float $amount,
         private readonly bool $payed,
@@ -18,11 +20,25 @@ class Transaction
         private readonly ?DateTimeInterface $dueDate = null,
         private readonly ?string $description = null,
     ) {
+        if ($this->amount <= 0) {
+            throw new LogicException('Amount must be greater than 0');
+        }
     }
 
     public function getId(): int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): self
+    {
+        if ($id <= 0) {
+            throw new LogicException('Id must be greater than 0');
+        }
+
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getName(): string

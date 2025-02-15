@@ -4,6 +4,8 @@ npm-debug.log
 yarn-error.log
 .env
 .phpunit.result.cache
+.phpunit.cache
 .env.backup
 .env.production
 .phpactor.json
+.tool-versions

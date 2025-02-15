@@ -16,7 +16,8 @@
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpmd/phpmd": "^2.15",
-        "symfony/dotenv": "^7.2"
+        "symfony/dotenv": "^7.2",
+        "pheromone/phpcs-security-audit": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -35,9 +36,8 @@
         }
     ],
     "minimum-stability": "stable",
-    "discard-changes": ["php-cs-fixer/diff"],
     "scripts": {
-        "test": "phpunit",
+        "test": "vendor/bin/phpunit",
         "rector-dry": "vendor/bin/rector -n",
         "rector": "vendor/bin/rector",
         "phpstan": "vendor/bin/phpstan analyse",
