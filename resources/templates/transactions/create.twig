@@ -1,0 +1,32 @@
+{% extends 'layout/main.twig' %}
+
+{% block main_content %}
+    <h1>Criar nova transação</h1>
+
+    <form method="post" action="/transaction/store">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">Valor</label>
+            <input type="text" class="form-control" id="amount" name="amount">
+        </div>
+
+        <select class="form-select" aria-label="Default select" name="type">
+            <option value="expense">Despesa</option>
+            <option value="income">Receita</option>
+        </select>
+
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="payedCheck" name="payed">
+            <label class="form-check-label" for="payedCheck">
+                Pago?
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+    </form>
+
+
+
+{% endblock %}

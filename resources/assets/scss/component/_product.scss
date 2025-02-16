@@ -1,0 +1,20 @@
+@import "variables";
+
+$loading-background: map-get($theme, "loading-background");
+
+.card {
+    &.product {
+        img {
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            background-color: $loading-background;
+        }
+    }
+}
+
+.product-details {
+    img {
+        aspect-ratio: 6 / 7;
+        background-color: $loading-background;
+    }
+}

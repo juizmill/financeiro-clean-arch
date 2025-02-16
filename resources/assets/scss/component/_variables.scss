@@ -1,0 +1,26 @@
+$themes: (
+    light: (
+        background: #FFFFFF,
+        color: #000000,
+        section-title: #000000,
+        section-even-background: #F5F5F5,
+        header-footer-background: #488EA8,
+        header-footer-color: #FFFFFF,
+        button-primary-background: #0D6EFD,
+        button-primary-text: #FFFFFF,
+        loading-background: #EAEAEA
+    ),
+    dark: (
+        background: #151515,
+        color: #FFFFFF,
+        section-title: #FFFFFF,
+        section-even-background: #000000,
+        header-footer-background: #393D3F,
+        header-footer-color: #FFFFFF,
+        button-primary-background: #C87F39,
+        button-primary-text: #FFFFFF,
+        loading-background: #333333
+    )
+);
+
+$theme: map-get($themes, "dark");

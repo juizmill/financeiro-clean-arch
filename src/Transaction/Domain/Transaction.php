@@ -9,7 +9,7 @@ use DateTimeInterface;
 
 class Transaction
 {
-    protected int $id;
+    protected ?int $id = null;
 
     public function __construct(
         private readonly string $name,
@@ -25,7 +25,7 @@ class Transaction
         }
     }
 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
