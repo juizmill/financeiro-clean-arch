@@ -27,6 +27,26 @@ return static function (): array {
             'path' => '../var/log/app/app.log',
             'level' => $appEnv === 'PRODUCTION' ? 400 : 100,
         ],
+
+        'database' => [
+            'db' => [
+                'host' => getenv('DB_HOST'),
+                'port' => getenv('DB_PORT'),
+                'dbname' => getenv('DB_DATABASE'),
+                'user' => getenv('DB_USERNAME'),
+                'password' => getenv('DB_PASSWORD'),
+                'driver' => 'pdo_pgsql', // 'pdo_mysql', 'pdo_sqlite'
+            ],
+            'migrations' => [
+                'directory' => 'database/migrations',
+                'namespace' => 'Migrations',
+                'table_storage' => [
+                    'table_name' => 'doctrine_migration_versions',
+                    'version_column_name' => 'version',
+                    'executed_at_column_name' => 'executed_at',
+                ],
+            ],
+        ],
     ];
 
     if ($appEnv !== 'PRODUCTION') {
