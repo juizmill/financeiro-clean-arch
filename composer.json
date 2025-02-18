@@ -44,6 +44,7 @@
     ],
     "minimum-stability": "stable",
     "scripts": {
+        "serve": "php -S localhost:8000 -t public",
         "test": "vendor/bin/phpunit",
         "rector-dry": "vendor/bin/rector -n",
         "rector": "vendor/bin/rector",

@@ -25,6 +25,7 @@ use App\Transaction\SessionHandler;
  * process.
  *
  * @extends ArrayObject<string,mixed>
+ * @codeCoverageIgnore
  */
 class RedisHandler extends ArrayObject implements SessionHandler
 {

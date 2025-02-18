@@ -95,12 +95,14 @@ readonly class Fingerprint
             }
         }
 
+        // @codeCoverageIgnoreStart
         // @phpstan-ignore-next-line
         if (mb_strpos($realIp, ',') !== false) {
             $ip = explode(',', $realIp); // @phpstan-ignore-line
 
             $realIp = $ip[0];
         }
+        // @codeCoverageIgnoreEnd
 
         return $realIp; // @phpstan-ignore-line
     }

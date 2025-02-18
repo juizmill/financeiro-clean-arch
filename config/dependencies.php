@@ -19,8 +19,9 @@ use Slim\Factory\ServerRequestCreatorFactory;
 use App\Transaction\UseCase\CreateTransaction;
 use App\Transaction\Infra\Session\ArrayHandler;
 use App\Transaction\UserInterface\Web\Twig\AssetFunction;
-use App\Transaction\Infra\Store\Memory\TransactionStoreMemory;
+use App\Transaction\Domain\Store\AbstractRepositoryFactory;
 use App\Transaction\Domain\Store\TransactionRepositoryInterface;
+use App\Transaction\Infra\Store\Memory\TransactionRepositoryFactory;
 
 $getSettings = fn (ContainerInterface $container) => (array) $container->get('settings');
 
@@ -28,18 +29,21 @@ return static function (ContainerBuilder $containerBuilder, array $settings) {
     $containerBuilder->addDefinitions([
         'settings' => $settings,
 
-        TransactionRepositoryInterface::class => function (ContainerInterface $container) {
-            return new TransactionStoreMemory();
+        TransactionRepositoryInterface::class => function (ContainerInterface $container): AbstractRepositoryFactory {
+            /** @var LoggerInterface $logger */
+            $logger = $container->get(LoggerInterface::class);
+
+            return new TransactionRepositoryFactory($logger);
         },
 
         CreateTransaction::class => function (ContainerInterface $container) {
             /** @var LoggerInterface $logger */
             $logger = $container->get(LoggerInterface::class);
 
-            /** @var TransactionRepositoryInterface $repository */
-            $repository = $container->get(TransactionRepositoryInterface::class);
+            /** @var AbstractRepositoryFactory $repositoryFactory */
+            $repositoryFactory = $container->get(TransactionRepositoryInterface::class);
 
-            return new CreateTransaction($logger, $repository);
+            return new CreateTransaction($logger, $repositoryFactory);
         },
 
         App::class => function (ContainerInterface $container) {

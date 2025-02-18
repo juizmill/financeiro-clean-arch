@@ -51,7 +51,7 @@ class CreateTransactionTest extends TestCase
         $repository = $this->getMockBuilder(TransactionRepositoryInterface::class)->getMock();
         $repository->expects($this->once())->method('save');
 
-        $this->repositoryFactory->expects($this->once())->method('createTransactionRepository')
+        $this->repositoryFactory->expects($this->once())->method('transactionRepository')
             ->willReturn($repository);
 
         $useCase = new CreateTransaction($this->logger, $this->repositoryFactory);

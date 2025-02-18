@@ -29,7 +29,7 @@ class ArrayHandler extends ArrayObject implements SessionHandler, SessionHandler
         $this->sessionFullPath = self::SESSION_PATH . '/' . $this->sessionName . '.php';
 
         if (! is_dir(self::SESSION_PATH)) {
-            mkdir(self::SESSION_PATH);
+            mkdir(self::SESSION_PATH); // @codeCoverageIgnore
         }
 
         if (! file_exists($this->sessionFullPath)) {
@@ -84,7 +84,7 @@ class ArrayHandler extends ArrayObject implements SessionHandler, SessionHandler
             }
 
             if (! session_start()) {
-                throw new RuntimeException('Failed to start session');
+                throw new RuntimeException('Failed to start session'); // @codeCoverageIgnore
             }
         }
     }

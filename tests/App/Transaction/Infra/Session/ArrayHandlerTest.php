@@ -55,6 +55,37 @@ class ArrayHandlerTest extends TestCase
         $handler = new ArrayHandler($this->logger, $this->sessionName);
         $handler->start();
 
-        Assert::assertIsArray($_SESSION);
+        Assert::assertIsArray($_SESSION); // @phpstan-ignore
+    }
+
+    #[Test]
+    #[TestDox('Should result get/set session')]
+    public function shouldResultGetSetSession(): void
+    {
+        $handler = new ArrayHandler($this->logger, $this->sessionName);
+        $handler->set('a', 'b');
+
+        $result = $handler->get('a', 'xx');
+
+        Assert::assertEquals('b', $result);
+    }
+
+    #[Test]
+    #[TestDox('Should result gc session')]
+    public function shouldResultGcSession(): void
+    {
+        $handler = new ArrayHandler($this->logger, $this->sessionName);
+
+        Assert::assertEquals(86400, $handler->gc(123));
+    }
+
+    #[Test]
+    #[TestDox('Should result method white session')]
+    public function shouldResultWhiteSession(): void
+    {
+        $handler = new ArrayHandler($this->logger, $this->sessionName);
+        $result = $handler->write('1', 'b');
+
+        Assert::assertTrue($result);
     }
 }

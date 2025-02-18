@@ -6,12 +6,12 @@ namespace App\Transaction\Domain\Store;
 
 use Psr\Log\LoggerInterface;
 
-abstract readonly class AbstractRepositoryFactory
+abstract class AbstractRepositoryFactory
 {
     public function __construct(protected LoggerInterface $logger)
     {
         $this->logger->debug('Creating ' . static::class);
     }
 
-    abstract public function createTransactionRepository(): TransactionRepositoryInterface;
+    abstract public function transactionRepository(): TransactionRepositoryInterface;
 }

@@ -18,7 +18,7 @@ class CreateTransaction extends UseCase
 
         $this->logger->debug('Creating transaction', ['input' => $input]);
 
-        $repository = $this->repositoryFactory->createTransactionRepository();
+        $repository = $this->repositoryFactory->transactionRepository();
         $this->output = $repository->save($input);
 
         return $this;

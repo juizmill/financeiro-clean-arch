@@ -40,6 +40,18 @@ class ProductStoreMemoryTest extends TestCase
     }
 
     #[Test]
+    #[TestDox('Should get by id transaction')]
+    public function shouldGetTransactionById(): void
+    {
+        $productStoreMemory = new TransactionStoreMemory();
+
+        $transaction = $productStoreMemory->save($this->input());
+        $result = $productStoreMemory->getById($transaction->getId());
+
+        Assert::assertInstanceOf(Transaction::class, $result);
+    }
+
+    #[Test]
     #[TestDox('Should save a transaction')]
     public function shouldSaveTransaction(): void
     {
