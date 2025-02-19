@@ -2,6 +2,7 @@
 <?php
 
 use Doctrine\DBAL\DriverManager;
+use Symfony\Component\Dotenv\Dotenv;
 use Doctrine\Migrations\DependencyFactory;
 use Symfony\Component\Console\Application;
 use Doctrine\Migrations\Tools\Console\Command;
@@ -10,10 +11,25 @@ use Doctrine\Migrations\Configuration\Connection\ExistingConnection;
 
 require_once 'vendor/autoload.php';
 
+$envFile = __DIR__ . '/.env';
+if (is_file($envFile) && is_readable($envFile)) {
+    $dotenv = new Dotenv();
+    $dotenv->usePutenv()->load($envFile);
+}
+
 $settings = require 'config/settings.php';
 
 $connection = DriverManager::getConnection($settings()['database']['db']);
-$config = new ConfigurationArray($settings()['database']['migrations']);
+$config = new ConfigurationArray([
+    'migrations_paths' => [
+        'Migrations' => __DIR__ . '/database/migrations',
+    ],
+    'table_storage' => [
+        'table_name' => 'doctrine_migration_versions',
+        'version_column_name' => 'version',
+        'executed_at_column_name' => 'executed_at',
+    ],
+]);
 
 $dependencyFactory = DependencyFactory::fromConnection($config, new ExistingConnection($connection));
 

@@ -12,13 +12,15 @@ use App\Transaction\UserInterface\Web\Route;
 use Psr\Http\Message\ServerRequestInterface;
 use App\Transaction\UserInterface\Web\Method;
 use App\Transaction\UseCase\CreateTransaction;
+use App\Transaction\Domain\Store\TransactionRepositoryInterface;
 
 class Transaction extends AbstractHandler
 {
     public function __construct(
         Environment $twig,
         LoggerInterface $logger,
-        protected CreateTransaction $createTransaction
+        protected CreateTransaction $createTransaction,
+        protected TransactionRepositoryInterface $transactionRepository
     ) {
         parent::__construct($twig, $logger);
     }
@@ -26,9 +28,9 @@ class Transaction extends AbstractHandler
     #[Route(Method::GET, '/transactions', 'transactions')]
     public function index(): ResponseInterface
     {
-        $this->logger->debug('Rendering page transactions');
+        $transactions = $this->transactionRepository->getTransactions();
 
-        return $this->responseWithTwig('transactions/index.twig');
+        return $this->responseWithTwig('transactions/index.twig', compact('transactions'));
     }
 
     #[Route(Method::GET, '/transaction/create', 'transaction.create')]

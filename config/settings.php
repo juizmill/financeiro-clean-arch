@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 return static function (): array {
     $appEnv = getenv('APP_ENV');
+    $appName = getenv('APP_NAME');
+    if ($appName === false) {
+        $appName = 'Finance System';
+    }
 
     if ($appEnv !== 'PRODUCTION' && $appEnv !== 'STAGE') {
         $appEnv = 'DEVELOPMENT';
@@ -17,13 +21,13 @@ return static function (): array {
         'log_errors' => true,
 
         'app' => [
-            'name' => 'Sistema Financeiro',
+            'name' => $appName,
             'env' => $appEnv,
             'data' => getenv('APP_DATA'),
         ],
 
         'logger' => [
-            'name' => 'Finance System',
+            'name' => $appName,
             'path' => '../var/log/app/app.log',
             'level' => $appEnv === 'PRODUCTION' ? 400 : 100,
         ],
@@ -36,15 +40,6 @@ return static function (): array {
                 'user' => getenv('DB_USERNAME'),
                 'password' => getenv('DB_PASSWORD'),
                 'driver' => 'pdo_pgsql', // 'pdo_mysql', 'pdo_sqlite'
-            ],
-            'migrations' => [
-                'directory' => 'database/migrations',
-                'namespace' => 'Migrations',
-                'table_storage' => [
-                    'table_name' => 'doctrine_migration_versions',
-                    'version_column_name' => 'version',
-                    'executed_at_column_name' => 'executed_at',
-                ],
             ],
         ],
     ];

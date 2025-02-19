@@ -9,6 +9,8 @@ use Twig\TwigFunction;
 use DI\ContainerBuilder;
 use Psr\Log\LoggerInterface;
 use Slim\Factory\AppFactory;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use Twig\Loader\FilesystemLoader;
 use Monolog\Handler\StreamHandler;
 use App\Transaction\SessionHandler;
@@ -18,10 +20,10 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\ServerRequestCreatorFactory;
 use App\Transaction\UseCase\CreateTransaction;
 use App\Transaction\Infra\Session\ArrayHandler;
+use App\Transaction\Infra\Store\Dbal\TransactionStore;
 use App\Transaction\UserInterface\Web\Twig\AssetFunction;
-use App\Transaction\Domain\Store\AbstractRepositoryFactory;
 use App\Transaction\Domain\Store\TransactionRepositoryInterface;
-use App\Transaction\Infra\Store\Memory\TransactionRepositoryFactory;
+use App\Transaction\Infra\Store\Dbal\TransactionRepositoryFactory;
 
 $getSettings = fn (ContainerInterface $container) => (array) $container->get('settings');
 
@@ -29,19 +31,31 @@ return static function (ContainerBuilder $containerBuilder, array $settings) {
     $containerBuilder->addDefinitions([
         'settings' => $settings,
 
-        TransactionRepositoryInterface::class => function (ContainerInterface $container): AbstractRepositoryFactory {
+        Connection::class => function (ContainerInterface $container) use ($settings) {
+            $connection = $settings['database']['db'];
+
+            return DriverManager::getConnection($connection);
+        },
+
+        TransactionRepositoryInterface::class => function (ContainerInterface $container
+        ): TransactionRepositoryInterface {
             /** @var LoggerInterface $logger */
             $logger = $container->get(LoggerInterface::class);
 
-            return new TransactionRepositoryFactory($logger);
+            /** @var Connection $connection */
+            $connection = $container->get(Connection::class);
+
+            return new TransactionStore($logger, $connection);
         },
 
         CreateTransaction::class => function (ContainerInterface $container) {
             /** @var LoggerInterface $logger */
             $logger = $container->get(LoggerInterface::class);
 
-            /** @var AbstractRepositoryFactory $repositoryFactory */
-            $repositoryFactory = $container->get(TransactionRepositoryInterface::class);
+            /** @var Connection $connection */
+            $connection = $container->get(Connection::class);
+
+            $repositoryFactory = new TransactionRepositoryFactory($logger, $connection);
 
             return new CreateTransaction($logger, $repositoryFactory);
         },
