@@ -21,16 +21,17 @@ interface TransactionRepositoryInterface
     /**
      * Returns an iterable of all transactions.
      *
-     * @return iterable<Transaction>
+     * @return array<int, Transaction>|Transaction[] the transactions
      */
     public function getTransactions(): iterable;
 
     /**
      * Saves a transaction to the repository.
      *
-     * @param Input $input the transaction data to save
+     * @param  Input                     $input the transaction data to save
+     * @return array<string, mixed>|null the saved transactions
      */
-    public function save(Input $input): Transaction;
+    public function save(Input $input): ?iterable;
 
     /**
      * Deletes a transaction from the repository.

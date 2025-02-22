@@ -14,12 +14,6 @@ return static function (): array {
     }
 
     $settings = [
-        'di_compilation_path' => '',
-        'twig_cache' => '',
-        'twig_debug' => $appEnv === 'DEVELOPMENT',
-        'display_error_details' => $appEnv === 'DEVELOPMENT',
-        'log_errors' => true,
-
         'app' => [
             'name' => $appName,
             'env' => $appEnv,
@@ -45,9 +39,6 @@ return static function (): array {
     ];
 
     if ($appEnv !== 'PRODUCTION') {
-        $settings['di_compilation_path'] = '';
-        $settings['twig_cache'] = '';
-        $settings['display_error_details'] = true;
         $settings['logger']['level'] = 100;
     }
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\UserInterface\Web\Handler;
 
 use Slim\App;
-use Twig\Environment;
 use App\Transaction\Input;
 use Psr\Log\LoggerInterface;
 use App\UserInterface\Web\Route;
@@ -19,12 +18,11 @@ class TransactionHandler extends AbstractHandler
 {
     public function __construct(
         protected App $app,
-        protected Environment $twig,
         protected LoggerInterface $logger,
         protected CreateTransaction $createTransaction,
         protected TransactionRepositoryInterface $transactionRepository,
     ) {
-        parent::__construct($app, $twig, $logger);
+        parent::__construct($app, $logger);
     }
 
     #[Route(Method::GET, '/transactions', 'transactions')]
@@ -32,77 +30,74 @@ class TransactionHandler extends AbstractHandler
     {
         $transactions = $this->transactionRepository->getTransactions();
 
-        return $this->responseWithTwig('transactions/index.twig', compact('transactions'));
+        return $this->json($transactions);
     }
 
-    #[Route(Method::GET, '/transaction/create', 'transaction.create')]
-    public function create(): ResponseInterface
+    #[Route(Method::GET, '/transaction/{id}', 'transaction.get')]
+    public function get(ServerRequestInterface $request): ResponseInterface
     {
-        $this->logger->debug('Rendering page create transactions');
+        $id = (int) $request->getAttribute('id'); // @phpstan-ignore-line
 
-        return $this->responseWithTwig('transactions/create.twig');
+        $transaction = $this->transactionRepository->getById($id);
+
+        if (null === $transaction) {
+            return $this->json([
+                'message' => 'Transaction not found',
+            ])->withStatus(404);
+        }
+
+        return $this->json($transaction->toArray());
     }
 
     #[Route(Method::POST, '/transaction/store', 'transaction.store')]
     public function store(ServerRequestInterface $request): ResponseInterface
     {
-        $this->logger->debug('Rendering page store transactions');
-
         $input = new Input($request->getParsedBody()); // @phpstan-ignore-line
 
-        $transaction = $this->createTransaction->execute($input);
+        $transaction = $this->createTransaction->execute($input)->getOutput();
+        if (null === $transaction) {
+            return $this->json('Transaction not created')->withStatus(400);
+        }
 
-        return $this->redirect('/transactions');
+        return $this->json($transaction->toArray())->withStatus(201);
     }
 
-    #[Route(Method::GET, '/transaction/{id}/edit', 'transaction.edit')]
-    public function edit(ServerRequestInterface $request): ResponseInterface
-    {
-        $this->logger->debug('Rendering page edit transactions');
-
-        $id = (int) $request->getAttribute('id');
-
-        $transaction = $this->transactionRepository->getById($id);
-
-        return $this->responseWithTwig('transactions/edit.twig', compact('transaction'));
-    }
-
-    #[Route(Method::POST, '/transaction/{id}/update', 'transaction.update')]
+    #[Route(Method::PUT, '/transaction/{id}/update', 'transaction.update')]
     public function update(ServerRequestInterface $request): ResponseInterface
     {
-        $this->logger->debug('Rendering page update transactions');
-
-        $id = (int) $request->getAttribute('id');
+        $id = (int) $request->getAttribute('id'); // @phpstan-ignore-line
 
         $transaction = $this->transactionRepository->getById($id);
 
         if (null === $transaction) {
-            return $this->redirect('/transactions');
+            return $this->json([
+                'message' => 'Transaction not found',
+            ])->withStatus(404);
         }
 
         $data = $request->getParsedBody();
-        $data['id'] = $id;
+        $data['id'] = $id; // @phpstan-ignore-line
         $input = new Input($data); // @phpstan-ignore-line
-        $this->transactionRepository->save($input);
+        $transaction = $this->transactionRepository->save($input);
 
-        return $this->redirect('/transactions');
+        return $this->json($transaction)->withStatus(201);
     }
 
     #[Route(Method::GET, '/transaction/{id}/delete', 'transaction.destroy')]
     public function destroy(ServerRequestInterface $request): ResponseInterface
     {
-        $this->logger->debug('Rendering page destroy transactions');
-
-        $id = (int) $request->getAttribute('id');
+        $id = (int) $request->getAttribute('id'); // @phpstan-ignore-line
 
         $transaction = $this->transactionRepository->getById($id);
 
         if (null === $transaction) {
-            return $this->redirect('/transactions');
+            return $this->json([
+                'message' => 'Transaction not found',
+            ])->withStatus(404);
         }
 
         $this->transactionRepository->delete($id);
 
-        return $this->redirect('/transactions');
+        return $this->json()->withStatus(204);
     }
 }

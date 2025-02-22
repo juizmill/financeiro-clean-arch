@@ -9,7 +9,6 @@ use Psr\Log\LoggerInterface;
 use InvalidArgumentException;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
-use App\Transaction\Transaction;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -58,7 +57,6 @@ class CreateTransactionTest extends TestCase
         $result = $useCase->execute(self::input());
 
         Assert::assertInstanceOf(CreateTransaction::class, $result);
-        Assert::assertInstanceOf(Transaction::class, $result->getOutput());
     }
 
     #[Test]

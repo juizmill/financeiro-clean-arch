@@ -75,4 +75,26 @@ class Transaction
     {
         return $this->description;
     }
+
+    /**
+     * Converts the transaction object to an associative array.
+     *
+     * This method is useful when you need to convert a Transaction object to an array, which can be
+     * easily serialized, stored in a database, or sent over the wire.
+     *
+     * @return array<string, mixed> an associative array containing the transaction data
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'amount' => $this->amount,
+            'payed' => $this->payed,
+            'type' => $this->typeEnum->value,
+            'paymentDate' => $this->paymentDate,
+            'dueDate' => $this->dueDate,
+            'description' => $this->description,
+        ];
+    }
 }

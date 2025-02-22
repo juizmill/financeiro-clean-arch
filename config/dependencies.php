@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 use Slim\App;
 use Monolog\Logger;
-use Twig\Environment;
-use Twig\TwigFunction;
 use App\SessionHandler;
 use DI\ContainerBuilder;
 use Psr\Log\LoggerInterface;
 use Slim\Factory\AppFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use Twig\Loader\FilesystemLoader;
 use App\UseCase\CreateTransaction;
 use Monolog\Handler\StreamHandler;
 use App\Infra\Session\ArrayHandler;
@@ -20,7 +17,6 @@ use Monolog\Handler\ErrorLogHandler;
 use Psr\Container\ContainerInterface;
 use App\Infra\Store\Dbal\TransactionStore;
 use Psr\Http\Message\ServerRequestInterface;
-use App\UserInterface\Web\Twig\AssetFunction;
 use Slim\Factory\ServerRequestCreatorFactory;
 use App\Infra\Store\Dbal\TransactionRepositoryFactory;
 use App\Transaction\Store\TransactionRepositoryInterface;
@@ -100,24 +96,6 @@ return static function (ContainerBuilder $containerBuilder, array $settings) {
 
         ServerRequestInterface::class => function () {
             return ServerRequestCreatorFactory::create()->createServerRequestFromGlobals();
-        },
-
-        Environment::class => function () use ($settings) {
-            $mainTemplatesDir = '../resources/templates';
-            $loader = new FilesystemLoader($mainTemplatesDir);
-
-            $twig = new Environment($loader, ['debug' => $settings['twig_debug'] ?? false]);
-            $twig->addFunction(new TwigFunction('public_path', [new AssetFunction(), 'publicPath']));
-
-            if ($settings['app']['env'] !== 'PRODUCTION') {
-                $twig->enableDebug();
-            }
-
-            if ($settings['app']['env'] === 'PRODUCTION' && $settings['twig_cache'] !== '') {
-                $twig->setCache($settings['twig_cache']);
-            }
-
-            return $twig;
         },
     ]);
 };

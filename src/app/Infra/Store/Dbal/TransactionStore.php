@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Infra\Store\Dbal;
 
+use Throwable;
 use App\Transaction\Input;
 use Psr\Log\LoggerInterface;
 use Doctrine\DBAL\Connection;
 use App\Transaction\Transaction;
 use Doctrine\DBAL\Query\QueryBuilder;
+use App\Transaction\TransactionDecorator;
 use App\Transaction\Store\TransactionRepositoryInterface;
 
 class TransactionStore implements TransactionRepositoryInterface
@@ -37,17 +39,18 @@ class TransactionStore implements TransactionRepositoryInterface
             }
 
             return self::dataTransform($result);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
         }
 
         return null;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getTransactions(): iterable
     {
-        $transactions = [];
-
         try {
             $queryBuilder = $this->connection->createQueryBuilder()
                 ->select('*')
@@ -56,34 +59,37 @@ class TransactionStore implements TransactionRepositoryInterface
 
             $this->logQuery($queryBuilder);
 
-            $results = $queryBuilder->executeQuery()->fetchAllAssociative();
+            $transactions = $queryBuilder->executeQuery()->fetchAllAssociative();
 
-            if (count($results) > 0) {
-                foreach ($results as $result) {
-                    $transactions[] = self::dataTransform($result);
-                }
+            if (count($transactions) <= 0) {
+                return [];
+            }
+
+            foreach ($transactions as $key => $transaction) {
+                $transactions[$key] = self::dataTransform($transaction)->toArray();
             }
 
             return $transactions;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
-        }
 
-        return $transactions;
+            return [];
+        }
     }
 
     /**
-     * @throws \Throwable
+     * {@inheritdoc}
+     * @throws Throwable
      */
-    public function save(Input $input): Transaction
+    public function save(Input $input): ?iterable
     {
         $transaction = $input->extract();
 
         if ($transaction->getId() !== null) {
-            return self::update($input);
+            return self::update($input)?->toArray();
         }
 
-        return self::insert($input);
+        return self::insert($input)?->toArray();
     }
 
     /**
@@ -91,15 +97,14 @@ class TransactionStore implements TransactionRepositoryInterface
      *
      * @param Input $input the data to insert
      *
-     * @return Transaction the inserted transaction
+     * @return Transaction|null the inserted transaction
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
-    public function insert(Input $input): Transaction
+    public function insert(Input $input): ?Transaction
     {
-        $transaction = $input->extract();
-
         try {
+            $transaction = $input->extract();
             $queryBuilder = $this->connection->createQueryBuilder();
             $queryBuilder
                 ->insert('transactions')
@@ -126,14 +131,12 @@ class TransactionStore implements TransactionRepositoryInterface
 
             $id = (int) $this->connection->lastInsertId();
 
-            $transaction->setId($id);
-
-            return $transaction;
-        } catch (\Throwable $e) {
+            return $this->getById($id);
+        } catch (Throwable $e) {
             $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
-        }
 
-        return $transaction;
+            return null;
+        }
     }
 
     /**
@@ -141,13 +144,12 @@ class TransactionStore implements TransactionRepositoryInterface
      *
      * @param Input $input the input data to update
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
-    private function update(Input $input): Transaction
+    private function update(Input $input): ?Transaction
     {
-        $transaction = $input->extract();
-
         try {
+            $transaction = $input->extract();
             $queryBuilder = $this->connection->createQueryBuilder();
 
             $queryBuilder
@@ -174,12 +176,14 @@ class TransactionStore implements TransactionRepositoryInterface
 
             $queryBuilder->executeQuery();
 
-            return $transaction;
-        } catch (\Throwable $e) {
-            $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
-        }
+            $id = (int) $transaction->getId();
 
-        return $transaction;
+            return $this->getById($id);
+        } catch (Throwable $e) {
+            $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
+
+            return null;
+        }
     }
 
     /**
@@ -199,8 +203,15 @@ class TransactionStore implements TransactionRepositoryInterface
         $result['paymentDate'] = $result['payment_date'];
         $result['dueDate'] = $result['due_date'];
 
+        $createdAt = $result['created_at'] ?? null;
+        $updatedAt = $result['updated_at'] ?? null;
+
         // @phpstan-ignore-next-line
-        return (new Input($result))->extract();
+        $transaction = (new Input($result))->extract();
+
+        return (new TransactionDecorator($transaction))
+            ->setCreatedAt($createdAt)
+            ->setUpdatedAt($updatedAt);
     }
 
     /**

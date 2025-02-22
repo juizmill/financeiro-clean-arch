@@ -23,7 +23,7 @@ class TransactionStoreMemory implements TransactionRepositoryInterface
         return $this->transactions;
     }
 
-    public function save(Input $input): Transaction
+    public function save(Input $input): ?iterable
     {
         $transaction = $input->extract();
 
