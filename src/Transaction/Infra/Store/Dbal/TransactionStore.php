@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Transaction\Infra\Store\Dbal;
 
-use Throwable;
 use Psr\Log\LoggerInterface;
 use Doctrine\DBAL\Connection;
 use App\Transaction\Domain\Input;
-use DateMalformedStringException;
 use Doctrine\DBAL\Query\QueryBuilder;
 use App\Transaction\Domain\Transaction;
 use App\Transaction\Domain\Store\TransactionRepositoryInterface;
@@ -17,11 +15,10 @@ class TransactionStore implements TransactionRepositoryInterface
 {
     public function __construct(
         protected LoggerInterface $logger,
-        protected Connection $connection
+        protected Connection $connection,
     ) {
     }
 
-    /** {@inheritdoc} */
     public function getById(int $id): ?Transaction
     {
         try {
@@ -41,13 +38,12 @@ class TransactionStore implements TransactionRepositoryInterface
 
             return self::dataTransform($result);
         } catch (\Throwable $e) {
-            $this->logger->error($e->getTraceAsString());
+            $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
         }
 
         return null;
     }
 
-    /** {@inheritdoc} */
     public function getTransactions(): iterable
     {
         $transactions = [];
@@ -55,7 +51,8 @@ class TransactionStore implements TransactionRepositoryInterface
         try {
             $queryBuilder = $this->connection->createQueryBuilder()
                 ->select('*')
-                ->from('transactions', 't');
+                ->from('transactions', 't')
+                ->orderBy('t.id', 'ASC');
 
             $this->logQuery($queryBuilder);
 
@@ -69,15 +66,14 @@ class TransactionStore implements TransactionRepositoryInterface
 
             return $transactions;
         } catch (\Throwable $e) {
-            $this->logger->error($e->getTraceAsString());
+            $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
         }
 
         return $transactions;
     }
 
     /**
-     * {@inheritdoc}
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function save(Input $input): Transaction
     {
@@ -97,13 +93,11 @@ class TransactionStore implements TransactionRepositoryInterface
      *
      * @return Transaction the inserted transaction
      *
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function insert(Input $input): Transaction
     {
         $transaction = $input->extract();
-//
-//        $this->connection->beginTransaction();
 
         try {
             $queryBuilder = $this->connection->createQueryBuilder();
@@ -120,7 +114,7 @@ class TransactionStore implements TransactionRepositoryInterface
                 ])
                 ->setParameter('name', $transaction->getName())
                 ->setParameter('amount', $transaction->getAmount())
-                ->setParameter('payed', $transaction->isPayed())
+                ->setParameter('payed', $transaction->isPayed() ? 1 : 0)
                 ->setParameter('type', $transaction->getType()->value)
                 ->setParameter('paymentDate', $transaction->getPaymentDate())
                 ->setParameter('dueDate', $transaction->getDueDate())
@@ -135,9 +129,8 @@ class TransactionStore implements TransactionRepositoryInterface
             $transaction->setId($id);
 
             return $transaction;
-        } catch (Throwable $e) {
-            $this->logger->error($e->getTraceAsString());
-//            $this->connection->rollBack();
+        } catch (\Throwable $e) {
+            $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
         }
 
         return $transaction;
@@ -148,30 +141,29 @@ class TransactionStore implements TransactionRepositoryInterface
      *
      * @param Input $input the input data to update
      *
-     * @throws Throwable
+     * @throws \Throwable
      */
     private function update(Input $input): Transaction
     {
         $transaction = $input->extract();
 
-        $this->connection->beginTransaction();
-
         try {
             $queryBuilder = $this->connection->createQueryBuilder();
 
             $queryBuilder
-                ->update('transactions t')
-                ->set('t.name', ':name')
-                ->set('t.amount', ':amount')
-                ->set('t.payed', ':payed')
-                ->set('t.type', ':type')
-                ->set('t.payment_date', ':paymentDate')
-                ->set('t.due_date', ':dueDate')
-                ->set('t.description', ':description')
-                ->where('t.id = :id')
+                ->update('transactions')
+                ->set('name', ':name')
+                ->set('amount', ':amount')
+                ->set('payed', ':payed')
+                ->set('type', ':type')
+                ->set('payment_date', ':paymentDate')
+                ->set('due_date', ':dueDate')
+                ->set('description', ':description')
+                ->set('updated_at', 'CURRENT_TIMESTAMP')
+                ->where('id = :id')
                 ->setParameter('name', $transaction->getName())
                 ->setParameter('amount', $transaction->getAmount())
-                ->setParameter('payed', $transaction->isPayed())
+                ->setParameter('payed', $transaction->isPayed() ? 1 : 0)
                 ->setParameter('type', $transaction->getType()->value)
                 ->setParameter('paymentDate', $transaction->getPaymentDate())
                 ->setParameter('dueDate', $transaction->getDueDate())
@@ -183,9 +175,8 @@ class TransactionStore implements TransactionRepositoryInterface
             $queryBuilder->executeQuery();
 
             return $transaction;
-        } catch (Throwable $e) {
-            $this->logger->error($e->getTraceAsString());
-            $this->connection->rollBack();
+        } catch (\Throwable $e) {
+            $this->logger->error("{$e->getMessage()}\n{$e->getTraceAsString()}");
         }
 
         return $transaction;
@@ -200,8 +191,8 @@ class TransactionStore implements TransactionRepositoryInterface
      *
      * @param array<string, mixed> $result a DB result row
      *
-     * @return Transaction                  the transformed Transaction object
-     * @throws DateMalformedStringException
+     * @return Transaction                   the transformed Transaction object
+     * @throws \DateMalformedStringException
      */
     private static function dataTransform(array $result): Transaction
     {
@@ -225,5 +216,17 @@ class TransactionStore implements TransactionRepositoryInterface
         ]);
 
         $this->logger->info((string) $data);
+    }
+
+    public function delete(int $id): void
+    {
+        $queryBuilder = $this->connection->createQueryBuilder()
+            ->delete('transactions')
+            ->where('id = :id')
+            ->setParameter('id', $id);
+
+        $this->logQuery($queryBuilder);
+
+        $queryBuilder->executeQuery();
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Transaction\UserInterface\Web\Handler;
 
+use Slim\App;
 use Twig\Environment;
 use Slim\Psr7\Response;
 use Twig\Error\LoaderError;
@@ -15,11 +16,12 @@ use Fig\Http\Message\StatusCodeInterface;
 
 abstract class AbstractHandler
 {
-    private ResponseInterface $response;
+    protected ResponseInterface $response;
 
     public function __construct(
-        private readonly Environment $twig,
-        protected readonly LoggerInterface $logger
+        protected App $app,
+        protected Environment $twig,
+        protected LoggerInterface $logger
     ) {
         $this->response = new Response();
     }
@@ -56,5 +58,11 @@ abstract class AbstractHandler
         $response->getBody()->write($this->twig->render($path, $context));
 
         return $response;
+    }
+
+    protected function redirect(string $path): ResponseInterface
+    {
+        return $this->response->withStatus(StatusCodeInterface::STATUS_FOUND)
+            ->withHeader('Location', $path);
     }
 }

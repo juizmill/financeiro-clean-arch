@@ -27,6 +27,7 @@ final class Version20250218234525 extends AbstractMigration
         $table->addColumn('type', 'string', ['notnull' => true])->setDefault('expense');
         $table->addColumn('payment_date', 'date', ['notnull' => false]);
         $table->addColumn('due_date', 'date', ['notnull' => false]);
+        $table->addColumn('description', 'text', ['notnull' => false]);
         $table->addColumn('created_at', 'datetime', ['default' => 'CURRENT_TIMESTAMP']);
         $table->addColumn('updated_at', 'datetime', ['notnull' => false]);
         $table->setPrimaryKey(['id']);

@@ -31,4 +31,11 @@ interface TransactionRepositoryInterface
      * @param Input $input the transaction data to save
      */
     public function save(Input $input): Transaction;
+
+    /**
+     * Deletes a transaction from the repository.
+     *
+     * @param int $id the transaction ID to delete
+     */
+    public function delete(int $id): void;
 }
