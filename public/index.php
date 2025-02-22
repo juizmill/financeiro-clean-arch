@@ -6,9 +6,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Transaction\FinanceSystem;
+use App\FinanceSystem;
 use Symfony\Component\Dotenv\Dotenv;
-use App\Transaction\UserInterface\Web\FinanceSystemInterface;
+use App\UserInterface\Web\FinanceSystemInterface;
 
 try {
     // Decline static file requests back to the PHP built-in webserver
